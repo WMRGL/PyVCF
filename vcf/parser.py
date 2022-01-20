@@ -430,7 +430,7 @@ class Reader(object):
 
     def _parse_sample_format(self, samp_fmt):
         """ Parse the format of the calls in this _Record """
-        samp_fmt = make_calldata_tuple(samp_fmt.split(':'))
+        samp_fmt = make_calldata_tuple(samp_fmt.decode().split(':'))
 
         for fmt in samp_fmt._fields:
             try:
@@ -459,16 +459,16 @@ class Reader(object):
             self._format_cache[samp_fmt] = self._parse_sample_format(samp_fmt)
         samp_fmt = self._format_cache[samp_fmt]
 
-        if cparse:
-            return cparse.parse_samples(
-                self.samples, samples, samp_fmt, samp_fmt._types, samp_fmt._nums, site)
+#        if cparse:
+#            return cparse.parse_samples(
+#                self.samples, samples, samp_fmt, samp_fmt._types, samp_fmt._nums, site)
 
         samp_data = []
         _map = self._map
 
         nfields = len(samp_fmt._fields)
 
-        for name, sample in itertools.izip(self.samples, samples):
+        for name, sample in zip(self.samples, samples):
 
             # parse the data for this sample
             sampdat = [None] * nfields
@@ -548,7 +548,7 @@ class Reader(object):
         else:
             return _Substitution(str)
 
-    def next(self):
+    def __next__(self):
         '''Return the next record in the file.'''
         line = next(self.reader)
         row = self._row_pattern.split(line.rstrip())
@@ -588,7 +588,7 @@ class Reader(object):
                 info, fmt, self._sample_indexes)
 
         if fmt is not None:
-            samples = self._parse_samples(row[9:], fmt, record)
+            samples = self._parse_samples(row[9:], fmt.encode('utf-8'), record)
             record.samples = samples
 
         return record
@@ -641,7 +641,7 @@ class Writer(object):
     """VCF Writer. On Windows Python 2, open stream with 'wb'."""
 
     # Reverse keys and values in header field count dictionary
-    counts = dict((v,k) for k,v in field_counts.iteritems())
+    counts = dict((v,k) for k,v in field_counts.items())
 
     def __init__(self, stream, template, lineterminator="\n"):
         self.writer = csv.writer(stream, delimiter="\t",
@@ -659,7 +659,7 @@ class Writer(object):
         two = '##{key}=<ID={0},Description="{1}">\n'
         four = '##{key}=<ID={0},Number={num},Type={2},Description="{3}">\n'
         _num = self._fix_field_count
-        for (key, vals) in template.metadata.iteritems():
+        for (key, vals) in template.metadata.items():
             if key in SINGULAR_METADATA:
                 vals = [vals]
             for val in vals:
